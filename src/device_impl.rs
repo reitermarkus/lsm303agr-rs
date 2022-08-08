@@ -149,6 +149,56 @@ where
         Ok(())
     }
 
+    /// Reboot accelerometer memory content.
+    pub fn acc_reboot_mem(&mut self) -> Result<(), Error<CommE, PinE>> {
+        let reg5 = self.ctrl_reg5_a | CtrlReg5A::BOOT;
+        self.iface.write_accel_register(reg5)?;
+
+        // Ensure the `BOOT` flag is cleared again.
+        let reg5 = CtrlReg5A::default();
+        self.iface.write_accel_register(reg5)?;
+        self.ctrl_reg5_a = reg5;
+
+        // Registers are now reset.
+        self.temp_cfg_reg_a = Default::default();
+
+        Ok(())
+    }
+
+    /// Reboot magnetometer memory content.
+    pub fn mag_reboot_mem(&mut self) -> Result<(), Error<CommE, PinE>> {
+        let rega = self.cfg_reg_a_m | CfgRegAM::REBOOT;
+        self.iface.write_mag_register(rega)?;
+
+        // Ensure the `REBOOT` flag is cleared again.
+        let rega = CfgRegAM::default();
+        self.iface.write_mag_register(rega)?;
+
+        // Registers are now reset.
+        self.cfg_reg_a_m = rega;
+        self.cfg_reg_b_m = Default::default();
+        self.cfg_reg_c_m = Default::default();
+
+        Ok(())
+    }
+
+    /// Soft reset magnetometer and clear registers.
+    pub fn mag_soft_reset(&mut self) -> Result<(), Error<CommE, PinE>> {
+        let rega = self.cfg_reg_a_m | CfgRegAM::SOFT_RST;
+        self.iface.write_mag_register(rega)?;
+
+        // Ensure `SOFT_RST` flag is cleared again.
+        let rega = CfgRegAM::default();
+        self.iface.write_mag_register(rega)?;
+
+        // Registers are now reset.
+        self.cfg_reg_a_m = rega;
+        self.cfg_reg_b_m = Default::default();
+        self.cfg_reg_c_m = Default::default();
+
+        Ok(())
+    }
+
     /// Configure the DRDY pin as a digital output.
     pub fn mag_enable_int(&mut self) -> Result<(), Error<CommE, PinE>> {
         let regc = self.cfg_reg_c_m | CfgRegCM::INT_MAG;
