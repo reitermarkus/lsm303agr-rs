@@ -35,7 +35,7 @@ where
         Ok(())
     }
 
-    /// Set magnetometer power mode.
+    /// Set magnetometer power/resolution mode.
     ///
     #[doc = include_str!("delay.md")]
     pub fn set_mag_mode<D: DelayUs<u32>>(
