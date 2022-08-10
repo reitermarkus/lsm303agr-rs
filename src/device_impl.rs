@@ -200,8 +200,17 @@ where
     }
 
     /// Configure the DRDY pin as a digital output.
-    pub fn mag_enable_int(&mut self) -> Result<(), Error<CommE, PinE>> {
-        let regc = self.cfg_reg_c_m | CfgRegCM::INT_MAG;
+    pub fn mag_enable_interrupt(&mut self) -> Result<(), Error<CommE, PinE>> {
+        let regc = self.cfg_reg_c_m.union(CfgRegCM::INT_MAG);
+        self.iface.write_mag_register(regc)?;
+        self.cfg_reg_c_m = regc;
+
+        Ok(())
+    }
+
+    /// Unconfigure the DRDY pin as a digital output.
+    pub fn mag_disable_interrupt(&mut self) -> Result<(), Error<CommE, PinE>> {
+        let regc = self.cfg_reg_c_m.difference(CfgRegCM::INT_MAG);
         self.iface.write_mag_register(regc)?;
         self.cfg_reg_c_m = regc;
 
