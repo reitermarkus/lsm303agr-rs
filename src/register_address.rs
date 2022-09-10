@@ -17,7 +17,7 @@ pub trait RegWrite<D = u8>: RegRead<D> {
 
 macro_rules! register {
   (@impl_reg_read $ty:ident, $addr:literal, $output:ident) => {
-    impl RegRead for $ty {
+    impl $crate::register_address::RegRead for $ty {
       type Output = $output;
 
       const ADDR: u8 = $addr;
@@ -30,7 +30,7 @@ macro_rules! register {
   (@impl_reg_write $ty:ident, $addr:literal, $output:ident) => {
     register!(@impl_reg_read $ty, $addr, Self);
 
-    impl RegWrite for $ty {
+    impl $crate::register_address::RegWrite for $ty {
       fn data(&self) -> u8 {
         self.bits()
       }
@@ -65,6 +65,8 @@ macro_rules! register {
     register!(@impl_reg_write $ty, $addr, Self);
   };
 }
+
+pub(crate) use register;
 
 register! {
   /// STATUS_REG_AUX_A
@@ -350,7 +352,7 @@ register! {
 }
 
 register! {
-  /// WHO_AM_I_A_M
+  /// WHO_AM_I_M
   pub type WhoAmIM: 0x4F = MagnetometerId;
 }
 
@@ -402,16 +404,16 @@ impl CfgRegAM {
     }
 
     pub const fn is_single_mode(&self) -> bool {
-        !self.contains(CfgRegAM::MD1) && self.contains(CfgRegAM::MD0)
+        !self.contains(Self::MD1) && self.contains(Self::MD0)
     }
 
     pub const fn single_mode(self) -> Self {
-        self.difference(CfgRegAM::MD1).union(CfgRegAM::MD0) // 0b01
+        self.difference(Self::MD1).union(Self::MD0) // 0b01
     }
 
     #[cfg(test)]
     pub const fn is_idle_mode(&self) -> bool {
-        self.contains(CfgRegAM::MD1) // 0b10 or 0b11
+        self.contains(Self::MD1) // 0b10 or 0b11
     }
 
     pub const fn idle_mode(self) -> Self {

@@ -122,6 +122,10 @@
 use core::marker::PhantomData;
 mod accel_mode_and_odr;
 mod device_impl;
+
+/// LSM303C
+pub mod c;
+
 pub mod interface;
 mod mag_mode_change;
 mod magnetometer;
