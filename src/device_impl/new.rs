@@ -67,9 +67,11 @@ impl_new!(
     Lsm303c,
     ctrl_reg1_a,
     ctrl_reg2_a,
+    ctrl_reg3_a,
     ctrl_reg4_a,
     ctrl_reg1_m,
     ctrl_reg2_m,
     ctrl_reg3_m,
     ctrl_reg5_m,
+    fifo_ctrl,
 );

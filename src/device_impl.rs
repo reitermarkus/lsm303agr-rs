@@ -20,29 +20,12 @@ mod mag_mode_change;
 
 mod magnetometer;
 
+mod fifo;
+
 impl<DI, CommE, PinE, MODE> Lsm303agr<DI, MODE>
 where
     DI: ReadData<Error = Error<CommE, PinE>> + WriteData<Error = Error<CommE, PinE>>,
 {
-    /// Set the accelerometer FIFO mode and full threshold.
-    ///
-    /// The threshold is clamped to \[0, 31\].
-    pub fn acc_set_fifo_mode(&mut self, mode: FifoMode, fth: u8) -> Result<(), Error<CommE, PinE>> {
-        let mut reg5 = self.ctrl_reg5_a;
-        reg5.set(CtrlReg5A::FIFO_EN, mode != FifoMode::Bypass);
-        self.iface.write_accel_register(reg5)?;
-        self.ctrl_reg5_a = reg5;
-
-        let fifo_ctrl = self
-            .fifo_ctrl_reg_a
-            .with_mode(mode)
-            .with_full_threshold(fth);
-        self.iface.write_accel_register(fifo_ctrl)?;
-        self.fifo_ctrl_reg_a = fifo_ctrl;
-
-        Ok(())
-    }
-
     /// Enable accelerometer interrupt.
     pub fn acc_enable_interrupt(&mut self, interrupt: Interrupt) -> Result<(), Error<CommE, PinE>> {
         let reg3 = self.ctrl_reg3_a.with_interrupt(interrupt);

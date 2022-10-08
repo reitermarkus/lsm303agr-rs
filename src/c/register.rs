@@ -3,8 +3,8 @@
 use crate::register_address::register;
 
 use super::types::{
-    AccelOutputDataRate, AccelScale, AccelerometerId, MagMode, MagOutputDataRate, MagnetometerId,
-    StatusFlags,
+    AccelOutputDataRate, AccelScale, AccelerometerId, FifoMode, MagMode, MagOutputDataRate,
+    MagnetometerId, StatusFlags,
 };
 
 register! {
@@ -180,6 +180,29 @@ register! {
 }
 
 impl FifoCtrl {
+    pub const fn with_mode(self, mode: FifoMode) -> Self {
+        match mode {
+            FifoMode::Bypass => self.difference(Self::FMODE),
+            FifoMode::Fifo => self
+                .difference(Self::FMODE2)
+                .difference(Self::FMODE1)
+                .union(Self::FMODE0),
+            FifoMode::Stream => self
+                .difference(Self::FMODE2)
+                .union(Self::FMODE1)
+                .difference(Self::FMODE0),
+            FifoMode::StreamToFifo => self
+                .difference(Self::FMODE2)
+                .union(Self::FMODE1)
+                .union(Self::FMODE0),
+            FifoMode::BypassToStream => self
+                .union(Self::FMODE2)
+                .difference(Self::FMODE1)
+                .difference(Self::FMODE0),
+            FifoMode::BypassToFifo => self.union(Self::FMODE),
+        }
+    }
+
     pub const fn with_full_threshold(self, n: u8) -> Self {
         let n = if n > Self::FTH.bits {
             Self::FTH.bits

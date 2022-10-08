@@ -88,3 +88,20 @@ pub enum MagOutputDataRate {
     /// 80 Hz
     Hz80,
 }
+
+/// A FIFO mode.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum FifoMode {
+    /// Bypass mode
+    Bypass,
+    /// FIFO mode
+    Fifo,
+    /// Stream mode
+    Stream,
+    /// Stream-to-FIFO mode
+    StreamToFifo,
+    /// Bypass-to-Stream mode
+    BypassToStream,
+    /// Bypass-to-FIFO mode
+    BypassToFifo,
+}
