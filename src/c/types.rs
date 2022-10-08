@@ -15,6 +15,21 @@ pub enum AccelOutputDataRate {
     Hz800,
 }
 
+impl AccelOutputDataRate {
+    /// Create an `AccelOutputDataRate` with the given frequency in Hertz.
+    pub const fn from_hertz(hz: u16) -> Option<Self> {
+        Some(match hz {
+            10 => Self::Hz10,
+            50 => Self::Hz50,
+            100 => Self::Hz100,
+            200 => Self::Hz200,
+            400 => Self::Hz400,
+            800 => Self::Hz800,
+            _ => return None,
+        })
+    }
+}
+
 /// Accelerometer mode
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AccelMode {
@@ -85,6 +100,31 @@ pub enum MagOutputDataRate {
     Hz40,
     /// 80 Hz
     Hz80,
+}
+
+impl MagOutputDataRate {
+    /// Create an `MagOutputDataRate` with the given frequency in Hertz.
+    pub fn from_hertz(hz: f32) -> Option<Self> {
+        Some(if hz == 0.625 {
+            Self::Hz0_625
+        } else if hz == 1.25 {
+            Self::Hz1_25
+        } else if hz == 2.5 {
+            Self::Hz2_5
+        } else if hz == 5.0 {
+            Self::Hz5
+        } else if hz == 10.0 {
+            Self::Hz10
+        } else if hz == 20.0 {
+            Self::Hz20
+        } else if hz == 40.0 {
+            Self::Hz40
+        } else if hz == 80.0 {
+            Self::Hz80
+        } else {
+            return None;
+        })
+    }
 }
 
 /// A FIFO mode.
