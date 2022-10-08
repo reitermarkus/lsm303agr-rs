@@ -70,6 +70,21 @@ register! {
 }
 
 register! {
+  /// CTRL_REG3_A
+  #[derive(Default)]
+  pub struct CtrlReg3A: 0x22 {
+    const FIFO_EN      = 0b10000000;
+    const STOP_FTH     = 0b01000000;
+    const INT_XL_INACT = 0b00100000;
+    const INT_XL_IG2   = 0b00010000;
+    const INT_XL_IG1   = 0b00001000;
+    const INT_XL_OVR   = 0b00000100;
+    const INT_XL_FTH   = 0b00000010;
+    const INT_XL_DRDY  = 0b00000001;
+  }
+}
+
+register! {
   /// CTRL_REG4_A
   #[derive(Default)]
   pub struct CtrlReg4A: 0x23 {
@@ -103,6 +118,42 @@ impl CtrlReg4A {
             AccelScale::G8 => self.union(Self::FS),
         }
     }
+}
+
+register! {
+  /// CTRL_REG5_A
+  #[derive(Default)]
+  pub struct CtrlReg5A: 0x24 {
+    const DEBUG      = 0b10000000;
+    const SOFT_RESET = 0b01000000;
+    const DEC1       = 0b00100000;
+    const DEC0       = 0b00010000;
+    const ST2        = 0b00001000;
+    const ST1        = 0b00000100;
+    const H_LACTIVE  = 0b00000010;
+    const PP_OD      = 0b00000001;
+  }
+}
+
+register! {
+  /// CTRL_REG6_A
+  #[derive(Default)]
+  pub struct CtrlReg6A: 0x25 {
+    const BOOT      = 0b10000000;
+  }
+}
+
+register! {
+  /// CTRL_REG7_A
+  #[derive(Default)]
+  pub struct CtrlReg7A: 0x26 {
+    const DCRM2  = 0b00100000;
+    const DCRM1  = 0b00010000;
+    const LIR2   = 0b00001000;
+    const LIR1   = 0b00000100;
+    const D4_IG2 = 0b00000010;
+    const D4_IG1 = 0b00000001;
+  }
 }
 
 register! {
@@ -319,6 +370,15 @@ impl CtrlReg3M {
     pub const fn idle_mode(self) -> Self {
         self.union(Self::MD1).union(Self::MD0) // 0b11
     }
+}
+
+register! {
+  /// CTRL_REG4_M
+  pub struct CtrlReg4M: 0x24 {
+    const OMZ1 = 0b00001000;
+    const OMZ0 = 0b00000100;
+    const BLE  = 0b00000010;
+  }
 }
 
 register! {
