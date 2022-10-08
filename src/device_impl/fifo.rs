@@ -32,7 +32,12 @@ macro_rules! impl_fifo {
     };
 }
 
-impl_fifo!(Lsm303agr, FifoMode, ctrl_reg5_a: CtrlReg5A, fifo_ctrl_reg_a);
+impl_fifo!(
+    Lsm303agr,
+    agr::FifoMode,
+    ctrl_reg5_a: agr::register::CtrlReg5A,
+    fifo_ctrl_reg_a
+);
 
 impl_fifo!(
     Lsm303c,

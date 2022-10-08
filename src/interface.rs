@@ -7,7 +7,7 @@ use embedded_hal::{
 
 use crate::{
     private,
-    register_address::{RegRead, RegWrite},
+    reg::{RegRead, RegWrite},
     Error,
 };
 
@@ -96,11 +96,12 @@ pub trait ReadData: private::Sealed {
     fn read_mag_register<R: RegRead>(&mut self) -> Result<R::Output, Self::Error>;
     /// Read an u16 accelerometer register
     fn read_accel_double_register<R: RegRead<u16>>(&mut self) -> Result<R::Output, Self::Error>;
+    /// Read an u16 magnetometer register
+    fn read_mag_double_register<R: RegRead<u16>>(&mut self) -> Result<R::Output, Self::Error>;
     /// Read 3 u16 accelerometer registers
     fn read_accel_3_double_registers<R: RegRead<(u16, u16, u16)>>(
         &mut self,
     ) -> Result<R::Output, Self::Error>;
-
     /// Read 3 u16 magnetometer registers
     fn read_mag_3_double_registers<R: RegRead<(u16, u16, u16)>>(
         &mut self,
@@ -122,6 +123,10 @@ where
     }
 
     fn read_accel_double_register<R: RegRead<u16>>(&mut self) -> Result<R::Output, Self::Error> {
+        self.read_double_register::<R>(ACCEL_ADDR)
+    }
+
+    fn read_mag_double_register<R: RegRead<u16>>(&mut self) -> Result<R::Output, Self::Error> {
         self.read_double_register::<R>(ACCEL_ADDR)
     }
 
@@ -206,6 +211,13 @@ where
         self.cs_xl.set_low().map_err(Error::Pin)?;
         let result = self.read_double_register::<R>();
         self.cs_xl.set_high().map_err(Error::Pin)?;
+        result
+    }
+
+    fn read_mag_double_register<R: RegRead<u16>>(&mut self) -> Result<R::Output, Self::Error> {
+        self.cs_mag.set_low().map_err(Error::Pin)?;
+        let result = self.read_double_register::<R>();
+        self.cs_mag.set_high().map_err(Error::Pin)?;
         result
     }
 

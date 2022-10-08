@@ -51,5 +51,9 @@ macro_rules! impl_interrupts {
     };
 }
 
-impl_interrupts!(Lsm303agr, Interrupt, cfg_reg_c_m: CfgRegCM::INT_MAG);
+impl_interrupts!(
+    Lsm303agr,
+    agr::Interrupt,
+    cfg_reg_c_m: agr::register::CfgRegCM::INT_MAG
+);
 impl_interrupts!(Lsm303c, c::Interrupt, int_reg_m: c::register::IntCfgM::IEA);

@@ -1,5 +1,3 @@
-pub(crate) use crate::types::{AccelerometerId, MagnetometerId, StatusFlags};
-
 /// Accelerometer output data rate
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AccelOutputDataRate {

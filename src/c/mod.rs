@@ -10,7 +10,7 @@ use register::{
     CtrlReg6A, FifoCtrl, IgCfg1A, IntCfgM,
 };
 
-/// LSM303C device driver
+/// An LSM303C accelerometer and magnetometer.
 #[derive(Debug)]
 pub struct Lsm303c<DI, MODE> {
     /// Digital interface: I2C or SPI

@@ -54,9 +54,9 @@ macro_rules! impl_init {
 
 impl_init!(
     Lsm303agr,
-    ctrl_reg4_a: CtrlReg4A,
-    cfg_reg_c_m: CfgRegCM,
-    temp_cfg_reg_a: TempCfgRegA,
+    ctrl_reg4_a: agr::register::CtrlReg4A,
+    cfg_reg_c_m: agr::register::CfgRegCM,
+    temp_cfg_reg_a: agr::register::TempCfgRegA,
 );
 
 impl_init!(

@@ -1,11 +1,12 @@
 use embedded_hal::blocking::delay::DelayUs;
 
 use crate::{
+    agr::{self, Lsm303agr},
     c::{self, Lsm303c},
     interface::{ReadData, WriteData},
     mode,
-    register_address::{CfgRegAM, CfgRegBM},
-    Error, Lsm303agr, MagMode, MagOutputDataRate, MagneticField,
+    register::{CfgRegAM, CfgRegBM},
+    Error, MagneticField,
 };
 
 macro_rules! impl_mag {
@@ -152,8 +153,8 @@ macro_rules! impl_mag {
 
 impl_mag!(
     Lsm303agr,
-    MagMode,
-    MagOutputDataRate,
+    agr::MagMode,
+    agr::MagOutputDataRate,
     cfg_reg_a_m,
     cfg_reg_a_m,
     cfg_reg_b_m: CfgRegBM

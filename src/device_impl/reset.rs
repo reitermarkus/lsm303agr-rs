@@ -69,9 +69,9 @@ macro_rules! impl_reset {
 
 impl_reset!(
     Lsm303agr,
-    ctrl_reg5_a: CtrlReg5A,
+    ctrl_reg5_a: agr::register::CtrlReg5A,
     [temp_cfg_reg_a],
-    cfg_reg_a_m: CfgRegAM,
+    cfg_reg_a_m: agr::register::CfgRegAM,
     [cfg_reg_b_m, cfg_reg_c_m],
 );
 

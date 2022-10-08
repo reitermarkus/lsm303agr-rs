@@ -1,10 +1,10 @@
 #![allow(unused)]
 
-use crate::register_address::register;
+use crate::reg::{register, RegRead};
+use crate::types::{AccelerometerId, MagnetometerId, StatusFlags, Temperature};
 
 use super::types::{
-    AccelOutputDataRate, AccelScale, AccelerometerId, FifoMode, Interrupt, MagMode,
-    MagOutputDataRate, MagnetometerId, StatusFlags,
+    AccelOutputDataRate, AccelScale, FifoMode, Interrupt, MagMode, MagOutputDataRate,
 };
 
 register! {
@@ -441,6 +441,21 @@ register! {
 register! {
   /// STATUS_REG_M
   pub type StatusRegM: 0x27 = StatusFlags;
+}
+
+/// TEMP_L_M (register `0x2F`)
+pub struct TempLM;
+
+impl RegRead<u16> for TempLM {
+    type Output = Temperature;
+
+    /// TEMP_L_M
+    const ADDR: u8 = 0x2F;
+
+    #[inline]
+    fn from_data(data: u16) -> Self::Output {
+        Temperature { raw: data }
+    }
 }
 
 register! {

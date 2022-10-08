@@ -1,10 +1,11 @@
 use embedded_hal::blocking::delay::DelayUs;
 
 use crate::{
+    agr::{self, Lsm303agr},
     c::{self, Lsm303c},
     interface::{ReadData, WriteData},
-    register_address::{CtrlReg1A, CtrlReg4A},
-    AccelMode, AccelOutputDataRate, AccelScale, Error, Lsm303agr,
+    register::{CtrlReg1A, CtrlReg4A},
+    Error,
 };
 
 impl<DI, CommE, PinE, MODE> Lsm303agr<DI, MODE>
@@ -20,8 +21,8 @@ where
     pub fn set_accel_mode_and_odr<D: DelayUs<u32>>(
         &mut self,
         delay: &mut D,
-        mode: AccelMode,
-        odr: impl Into<Option<AccelOutputDataRate>>,
+        mode: agr::AccelMode,
+        odr: impl Into<Option<agr::AccelOutputDataRate>>,
     ) -> Result<(), Error<CommE, PinE>> {
         let odr = odr.into();
 
@@ -35,7 +36,7 @@ where
             reg1 = reg1.with_odr(odr);
         }
 
-        let reg1 = if mode == AccelMode::LowPower {
+        let reg1 = if mode == agr::AccelMode::LowPower {
             reg1.union(CtrlReg1A::LPEN)
         } else {
             reg1.difference(CtrlReg1A::LPEN)
@@ -43,7 +44,7 @@ where
 
         let reg4 = self.ctrl_reg4_a.difference(CtrlReg4A::HR);
 
-        if mode != AccelMode::HighResolution {
+        if mode != agr::AccelMode::HighResolution {
             self.iface.write_accel_register(reg4)?;
             self.ctrl_reg4_a = reg4;
         }
@@ -52,7 +53,7 @@ where
         self.ctrl_reg1_a = reg1;
         self.accel_odr = odr;
 
-        if mode == AccelMode::HighResolution {
+        if mode == agr::AccelMode::HighResolution {
             let reg4 = reg4.union(CtrlReg4A::HR);
             self.iface.write_accel_register(reg4)?;
             self.ctrl_reg4_a = reg4;
@@ -67,19 +68,19 @@ where
     }
 
     /// Get the accelerometer mode.
-    pub fn get_accel_mode(&mut self) -> AccelMode {
+    pub fn get_accel_mode(&mut self) -> agr::AccelMode {
         let power_down = self.ctrl_reg1_a.intersection(CtrlReg1A::ODR).is_empty();
         let lp_enabled = self.ctrl_reg1_a.contains(CtrlReg1A::LPEN);
         let hr_enabled = self.ctrl_reg4_a.contains(CtrlReg4A::HR);
 
         if power_down {
-            AccelMode::PowerDown
+            agr::AccelMode::PowerDown
         } else if hr_enabled {
-            AccelMode::HighResolution
+            agr::AccelMode::HighResolution
         } else if lp_enabled {
-            AccelMode::LowPower
+            agr::AccelMode::LowPower
         } else {
-            AccelMode::Normal
+            agr::AccelMode::Normal
         }
     }
 }
@@ -179,21 +180,22 @@ macro_rules! impl_acc_mode_change {
     };
 }
 
-impl_acc_mode_change!(Lsm303agr, AccelScale, ctrl_reg4_a);
+impl_acc_mode_change!(Lsm303agr, agr::AccelScale, ctrl_reg4_a);
 impl_acc_mode_change!(Lsm303c, c::AccelScale, ctrl_reg4_a);
 
 fn check_accel_odr_is_compatible_with_mode<CommE, PinE>(
-    odr: Option<AccelOutputDataRate>,
-    mode: AccelMode,
+    odr: Option<agr::AccelOutputDataRate>,
+    mode: agr::AccelMode,
 ) -> Result<(), Error<CommE, PinE>> {
     match (odr, mode) {
-        (None, AccelMode::PowerDown) => Ok(()),
+        (None, agr::AccelMode::PowerDown) => Ok(()),
         (None, _) => Err(Error::InvalidInputData),
         (Some(odr), mode) => match (odr, mode) {
-            (AccelOutputDataRate::Khz1_344, AccelMode::LowPower)
+            (agr::AccelOutputDataRate::Khz1_344, agr::AccelMode::LowPower)
             | (
-                AccelOutputDataRate::Khz1_620LowPower | AccelOutputDataRate::Khz5_376LowPower,
-                AccelMode::Normal | AccelMode::HighResolution,
+                agr::AccelOutputDataRate::Khz1_620LowPower
+                | agr::AccelOutputDataRate::Khz5_376LowPower,
+                agr::AccelMode::Normal | agr::AccelMode::HighResolution,
             ) => Err(Error::InvalidInputData),
             _ => Ok(()),
         },
@@ -202,9 +204,9 @@ fn check_accel_odr_is_compatible_with_mode<CommE, PinE>(
 
 #[cfg(test)]
 mod accel_odr_mode_tests {
+    use super::agr::AccelMode;
+    use super::agr::AccelOutputDataRate as ODR;
     use super::check_accel_odr_is_compatible_with_mode;
-    use super::AccelMode;
-    use crate::AccelOutputDataRate as ODR;
 
     macro_rules! compatible {
         ($odr:ident, $power:ident) => {

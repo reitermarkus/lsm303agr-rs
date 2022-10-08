@@ -121,39 +121,21 @@ use core::marker::PhantomData;
 
 mod device_impl;
 
+/// LSM303AGR
+pub mod agr;
+pub use agr::*;
+
 /// LSM303C
 pub mod c;
+pub use c::Lsm303c;
 
 pub mod interface;
 mod types;
 pub use crate::types::{
-    mode, AccelMode, AccelOutputDataRate, AccelScale, Acceleration, AccelerometerId, Error,
-    FifoMode, Interrupt, MagMode, MagOutputDataRate, MagneticField, MagnetometerId,
-    ModeChangeError, Status, Temperature, TemperatureStatus,
+    mode, Acceleration, AccelerometerId, Error, MagneticField, MagnetometerId, ModeChangeError,
+    Status, Temperature, TemperatureStatus,
 };
-mod register_address;
-use crate::register_address::{
-    CfgRegAM, CfgRegBM, CfgRegCM, CtrlReg1A, CtrlReg3A, CtrlReg4A, CtrlReg5A, FifoCtrlRegA,
-    TempCfgRegA,
-};
-
-/// LSM303AGR device driver
-#[derive(Debug)]
-pub struct Lsm303agr<DI, MODE> {
-    /// Digital interface: I2C or SPI
-    iface: DI,
-    ctrl_reg1_a: CtrlReg1A,
-    ctrl_reg3_a: CtrlReg3A,
-    ctrl_reg4_a: CtrlReg4A,
-    ctrl_reg5_a: CtrlReg5A,
-    cfg_reg_a_m: CfgRegAM,
-    cfg_reg_b_m: CfgRegBM,
-    cfg_reg_c_m: CfgRegCM,
-    temp_cfg_reg_a: TempCfgRegA,
-    fifo_ctrl_reg_a: FifoCtrlRegA,
-    accel_odr: Option<AccelOutputDataRate>,
-    _mag_mode: PhantomData<MODE>,
-}
+mod reg;
 
 mod private {
     use crate::interface;
