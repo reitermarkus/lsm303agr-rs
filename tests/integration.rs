@@ -159,11 +159,11 @@ fn spi_mag_id_is_correct() {
 fn can_init_i2c() {
     let mut sensor = new_i2c(&[
         I2cTrans::write(ACCEL_ADDR, vec![Register::CTRL_REG4_A, BF::ACCEL_BDU]),
+        I2cTrans::write(MAG_ADDR, vec![Register::CFG_REG_C_M, BF::MAG_BDU]),
         I2cTrans::write(
             ACCEL_ADDR,
             vec![Register::TEMP_CFG_REG_A, BF::TEMP_EN1 | BF::TEMP_EN0],
         ),
-        I2cTrans::write(MAG_ADDR, vec![Register::CFG_REG_C_M, BF::MAG_BDU]),
     ]);
     sensor.init().unwrap();
     destroy_i2c(sensor);
@@ -174,8 +174,8 @@ fn can_init_spi() {
     let mut sensor = new_spi(
         &[
             SpiTrans::write(vec![Register::CTRL_REG4_A, BF::ACCEL_BDU]),
-            SpiTrans::write(vec![Register::TEMP_CFG_REG_A, BF::TEMP_EN1 | BF::TEMP_EN0]),
             SpiTrans::write(vec![Register::CFG_REG_C_M, BF::MAG_BDU]),
+            SpiTrans::write(vec![Register::TEMP_CFG_REG_A, BF::TEMP_EN1 | BF::TEMP_EN0]),
         ],
         default_cs_n(2),
         default_cs(),

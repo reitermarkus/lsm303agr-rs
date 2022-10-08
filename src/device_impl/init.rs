@@ -13,8 +13,9 @@ macro_rules! impl_init {
         {
             /// Initialize registers
             pub fn init(&mut self) -> Result<(), Error<CommE, PinE>> {
-                self.acc_enable_temp()?; // Also enables BDU.
-                self.mag_enable_bdu()
+                self.acc_enable_bdu()?;
+                self.mag_enable_bdu()?;
+                self.enable_temp()
             }
 
             /// Enable block data update for accelerometer.
@@ -27,24 +28,22 @@ macro_rules! impl_init {
                 Ok(())
             }
 
-            /// Enable the temperature sensor.
-            #[inline]
-            fn acc_enable_temp(&mut self) -> Result<(), Error<CommE, PinE>> {
-                self.acc_enable_bdu()?;
-
-                let reg = self.$temp_reg_field | <$temp_reg>::TEMP_EN;
-                self.iface.write_accel_register(reg)?;
-                self.$temp_reg_field = reg;
-
-                Ok(())
-            }
-
             /// Enable block data update for magnetometer.
             #[inline]
             fn mag_enable_bdu(&mut self) -> Result<(), Error<CommE, PinE>> {
                 let reg = self.$mag_bdu_reg_field | <$mag_bdu_reg>::BDU;
                 self.iface.write_mag_register(reg)?;
                 self.$mag_bdu_reg_field = reg;
+
+                Ok(())
+            }
+
+            /// Enable the temperature sensor.
+            #[inline]
+            fn enable_temp(&mut self) -> Result<(), Error<CommE, PinE>> {
+                let reg = self.$temp_reg_field | <$temp_reg>::TEMP_EN;
+                self.iface.write_accel_register(reg)?;
+                self.$temp_reg_field = reg;
 
                 Ok(())
             }

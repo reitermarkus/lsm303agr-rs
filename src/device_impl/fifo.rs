@@ -1,7 +1,7 @@
 use super::*;
 
 macro_rules! impl_fifo {
-    ($Lsm:ident, $FifoMode:ty, $en_reg_field:ident: $en_reg:ty, $mode_reg_field:ident) => {
+    ($Lsm:ident, $FifoMode:ty, $en_reg_field:ident: [$($en_bit:expr),*], $mode_reg_field:ident) => {
         impl<DI, CommE, PinE, MODE> $Lsm<DI, MODE>
         where
             DI: ReadData<Error = Error<CommE, PinE>> + WriteData<Error = Error<CommE, PinE>>,
@@ -15,7 +15,9 @@ macro_rules! impl_fifo {
                 fth: u8,
             ) -> Result<(), Error<CommE, PinE>> {
                 let mut en_reg = self.$en_reg_field;
-                en_reg.set(<$en_reg>::FIFO_EN, mode != <$FifoMode>::Bypass);
+                $(
+                    en_reg.set($en_bit, mode != <$FifoMode>::Bypass);
+                )*
                 self.iface.write_accel_register(en_reg)?;
                 self.$en_reg_field = en_reg;
 
@@ -35,13 +37,13 @@ macro_rules! impl_fifo {
 impl_fifo!(
     Lsm303agr,
     agr::FifoMode,
-    ctrl_reg5_a: agr::register::CtrlReg5A,
+    ctrl_reg5_a: [agr::register::CtrlReg5A::FIFO_EN],
     fifo_ctrl_reg_a
 );
 
 impl_fifo!(
     Lsm303c,
     c::FifoMode,
-    ctrl_reg3_a: c::register::CtrlReg3A,
+    ctrl_reg3_a: [c::register::CtrlReg3A::FIFO_EN, c::register::CtrlReg3A::STOP_FTH],
     fifo_ctrl
 );
