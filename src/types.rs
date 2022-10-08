@@ -60,8 +60,8 @@ pub struct Acceleration {
     pub(crate) x: u16,
     pub(crate) y: u16,
     pub(crate) z: u16,
-    pub(crate) mode: AccelMode,
-    pub(crate) scale: AccelScale,
+    pub(crate) resolution_factor: i16,
+    pub(crate) scaling_factor: u8,
 }
 
 impl RegRead<(u16, u16, u16)> for Acceleration {
@@ -104,61 +104,58 @@ impl Acceleration {
     /// Unscaled acceleration in X-direction.
     #[inline]
     pub const fn x_unscaled(&self) -> i16 {
-        (self.x as i16) / self.mode.resolution_factor()
+        self.x as i16 / self.resolution_factor
     }
 
     /// Unscaled acceleration in Y-direction.
     #[inline]
     pub const fn y_unscaled(&self) -> i16 {
-        (self.y as i16) / self.mode.resolution_factor()
+        self.y as i16 / self.resolution_factor
     }
 
     /// Unscaled acceleration in Z-direction.
     #[inline]
     pub const fn z_unscaled(&self) -> i16 {
-        (self.z as i16) / self.mode.resolution_factor()
+        self.z as i16 / self.resolution_factor
     }
 
     /// Unscaled acceleration in X-, Y- and Z-directions.
     #[inline]
     pub const fn xyz_unscaled(&self) -> (i16, i16, i16) {
-        let resolution_factor = self.mode.resolution_factor();
-
         (
-            (self.x as i16) / resolution_factor,
-            (self.y as i16) / resolution_factor,
-            (self.z as i16) / resolution_factor,
+            self.x as i16 / self.resolution_factor,
+            self.y as i16 / self.resolution_factor,
+            self.z as i16 / self.resolution_factor,
         )
     }
 
     /// Acceleration in X-direction in m*g* (milli-*g*).
     #[inline]
     pub const fn x_mg(&self) -> i32 {
-        (self.x_unscaled() as i32) * self.mode.scaling_factor(self.scale)
+        self.x_unscaled() as i32 * self.scaling_factor as i32
     }
 
     /// Acceleration in Y-direction in m*g* (milli-*g*).
     #[inline]
     pub const fn y_mg(&self) -> i32 {
-        (self.y_unscaled() as i32) * self.mode.scaling_factor(self.scale)
+        self.y_unscaled() as i32 * self.scaling_factor as i32
     }
 
     /// Acceleration in Z-direction in m*g* (milli-*g*).
     #[inline]
     pub const fn z_mg(&self) -> i32 {
-        (self.z_unscaled() as i32) * self.mode.scaling_factor(self.scale)
+        self.z_unscaled() as i32 * self.scaling_factor as i32
     }
 
     /// Acceleration in X-, Y- and Z-directions in m*g* (milli-*g*).
     #[inline]
     pub const fn xyz_mg(&self) -> (i32, i32, i32) {
         let (x_unscaled, y_unscaled, z_unscaled) = self.xyz_unscaled();
-        let scaling_factor = self.mode.scaling_factor(self.scale);
 
         (
-            (x_unscaled as i32) * scaling_factor,
-            (y_unscaled as i32) * scaling_factor,
-            (z_unscaled as i32) * scaling_factor,
+            x_unscaled as i32 * self.scaling_factor as i32,
+            y_unscaled as i32 * self.scaling_factor as i32,
+            z_unscaled as i32 * self.scaling_factor as i32,
         )
     }
 }
@@ -402,12 +399,12 @@ impl AccelMode {
         }
     }
 
-    pub(crate) const fn scaling_factor(&self, scale: AccelScale) -> i32 {
+    pub(crate) const fn scaling_factor(&self, scale: AccelScale) -> u8 {
         match self {
             Self::PowerDown => 0,
-            Self::HighResolution => scale as i32 / 2,
-            Self::Normal => scale as i32 * 2,
-            Self::LowPower => scale as i32 * 8,
+            Self::HighResolution => scale as u8 / 2,
+            Self::Normal => scale as u8 * 2,
+            Self::LowPower => scale as u8 * 8,
         }
     }
 }

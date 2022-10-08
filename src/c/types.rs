@@ -28,6 +28,24 @@ pub enum AccelMode {
     HighResolution,
 }
 
+impl AccelMode {
+    pub(crate) const fn resolution_factor(&self) -> i16 {
+        match self {
+            Self::PowerDown => 1,
+            Self::HighResolution => 1 << 4,
+            Self::Normal => 1 << 6,
+        }
+    }
+
+    pub(crate) const fn scaling_factor(&self, scale: AccelScale) -> u8 {
+        match self {
+            Self::PowerDown => 0,
+            Self::HighResolution => scale as u8 / 2,
+            Self::Normal => scale as u8 * 2,
+        }
+    }
+}
+
 /// Accelerometer scaling factor
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AccelScale {

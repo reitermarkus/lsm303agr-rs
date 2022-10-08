@@ -118,15 +118,13 @@
 #![doc(html_root_url = "https://docs.rs/lsm303agr/0.2.2")]
 
 use core::marker::PhantomData;
-mod accel_mode_and_odr;
+
 mod device_impl;
 
 /// LSM303C
 pub mod c;
 
 pub mod interface;
-mod mag_mode_change;
-mod magnetometer;
 mod types;
 pub use crate::types::{
     mode, AccelMode, AccelOutputDataRate, AccelScale, Acceleration, AccelerometerId, Error,
