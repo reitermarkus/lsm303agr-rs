@@ -69,6 +69,7 @@ impl_new!(
     ctrl_reg2_a,
     ctrl_reg3_a,
     ctrl_reg4_a,
+    ctrl_reg6_a,
     ig_cfg1_a,
     ctrl_reg1_m,
     ctrl_reg2_m,
