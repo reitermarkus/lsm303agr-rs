@@ -1,6 +1,7 @@
 use embedded_hal::blocking::delay::DelayUs;
 
 use crate::{
+    c::{self, Lsm303c},
     interface::{ReadData, WriteData},
     register_address::{CtrlReg1A, CtrlReg4A},
     AccelMode, AccelOutputDataRate, AccelScale, Error, Lsm303agr,
@@ -65,7 +66,7 @@ where
         Ok(())
     }
 
-    /// Get the accelerometer mode
+    /// Get the accelerometer mode.
     pub fn get_accel_mode(&mut self) -> AccelMode {
         let power_down = self.ctrl_reg1_a.intersection(CtrlReg1A::ODR).is_empty();
         let lp_enabled = self.ctrl_reg1_a.contains(CtrlReg1A::LPEN);
@@ -81,24 +82,105 @@ where
             AccelMode::Normal
         }
     }
+}
 
-    /// Set accelerometer scaling factor
+impl<DI, CommE, PinE, MODE> Lsm303c<DI, MODE>
+where
+    DI: ReadData<Error = Error<CommE, PinE>> + WriteData<Error = Error<CommE, PinE>>,
+{
+    /// Set accelerometer power/resolution mode and output data rate.
     ///
-    /// This changes the scale at which the acceleration is read.
-    /// `AccelScale::G2` for example can return values between -2g and +2g
-    /// where g is the gravity of the earth (~9.82 m/s²).
-    pub fn set_accel_scale(&mut self, scale: AccelScale) -> Result<(), Error<CommE, PinE>> {
-        let reg4 = self.ctrl_reg4_a.with_scale(scale);
-        self.iface.write_accel_register(reg4)?;
-        self.ctrl_reg4_a = reg4;
+    /// Returns `Error::InvalidInputData` if the mode is incompatible with
+    /// the given output data rate.
+    ///
+    #[doc = include_str!("delay.md")]
+    pub fn set_accel_mode_and_odr<D: DelayUs<u32>>(
+        &mut self,
+        delay: &mut D,
+        mode: c::AccelMode,
+        odr: impl Into<Option<c::AccelOutputDataRate>>,
+    ) -> Result<(), Error<CommE, PinE>> {
+        let odr = odr.into();
+
+        if odr.is_none() && mode != c::AccelMode::PowerDown {
+            return Err(Error::InvalidInputData);
+        }
+
+        let old_mode = self.get_accel_mode();
+
+        let mut reg1 = self.ctrl_reg1_a.difference(c::register::CtrlReg1A::ODR);
+
+        if let Some(odr) = odr {
+            reg1 = reg1.with_odr(odr);
+        }
+
+        let reg1 = if mode == c::AccelMode::HighResolution {
+            reg1.union(c::register::CtrlReg1A::HR)
+        } else {
+            reg1.difference(c::register::CtrlReg1A::HR)
+        };
+
+        self.iface.write_accel_register(reg1)?;
+        self.ctrl_reg1_a = reg1;
+        self.accel_odr = odr;
+
+        if old_mode == c::AccelMode::PowerDown && mode != c::AccelMode::PowerDown {
+            delay.delay_us(100_000);
+        }
+
         Ok(())
     }
 
-    /// Get accelerometer scaling factor
-    pub fn get_accel_scale(&self) -> AccelScale {
-        self.ctrl_reg4_a.scale()
+    /// Get the accelerometer mode.
+    pub fn get_accel_mode(&mut self) -> c::AccelMode {
+        let power_down = self
+            .ctrl_reg1_a
+            .intersection(c::register::CtrlReg1A::ODR)
+            .is_empty();
+        let hr_enabled = self.ctrl_reg1_a.contains(c::register::CtrlReg1A::HR);
+
+        if power_down {
+            c::AccelMode::PowerDown
+        } else if hr_enabled {
+            c::AccelMode::HighResolution
+        } else {
+            c::AccelMode::Normal
+        }
     }
 }
+
+macro_rules! impl_acc_mode_change {
+    (
+        $Lsm:ident,
+        $SCALE:ty,
+        $scale_reg_field:ident
+    ) => {
+        impl<DI, CommE, PinE, MODE> $Lsm<DI, MODE>
+        where
+            DI: ReadData<Error = Error<CommE, PinE>> + WriteData<Error = Error<CommE, PinE>>,
+        {
+            /// Set accelerometer scaling factor.
+            ///
+            /// This changes the scale at which the acceleration is read.
+            /// `AccelScale::G2` for example can return values between -2g and +2g
+            /// where g is the gravity of the earth (~9.82 m/s²).
+            pub fn set_accel_scale(&mut self, scale: $SCALE) -> Result<(), Error<CommE, PinE>> {
+                let reg = self.$scale_reg_field.with_scale(scale);
+                self.iface.write_accel_register(reg)?;
+                self.$scale_reg_field = reg;
+                Ok(())
+            }
+
+            /// Get accelerometer scaling factor.
+            pub fn get_accel_scale(&self) -> $SCALE {
+                self.$scale_reg_field.scale()
+            }
+        }
+    };
+}
+
+impl_acc_mode_change!(Lsm303agr, AccelScale, ctrl_reg4_a);
+impl_acc_mode_change!(Lsm303c, c::AccelScale, ctrl_reg4_a);
 
 fn check_accel_odr_is_compatible_with_mode<CommE, PinE>(
     odr: Option<AccelOutputDataRate>,

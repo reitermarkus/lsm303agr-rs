@@ -17,6 +17,28 @@ pub enum AccelOutputDataRate {
     Hz800,
 }
 
+/// Accelerometer mode
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AccelMode {
+    /// Power down
+    PowerDown,
+    /// Normal mode (10-bit)
+    Normal,
+    /// High resolution (12-bit)
+    HighResolution,
+}
+
+/// Accelerometer scaling factor
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AccelScale {
+    /// ±2*g*
+    G2 = 2,
+    /// ±4*g*
+    G4 = 4,
+    /// ±8*g*
+    G8 = 8,
+}
+
 /// Magnetometer mode
 pub enum MagMode {
     /// Low-power mode

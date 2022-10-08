@@ -3,7 +3,8 @@
 use crate::register_address::register;
 
 use super::types::{
-    AccelOutputDataRate, AccelerometerId, MagMode, MagOutputDataRate, MagnetometerId, StatusFlags,
+    AccelOutputDataRate, AccelScale, AccelerometerId, MagMode, MagOutputDataRate, MagnetometerId,
+    StatusFlags,
 };
 
 register! {
@@ -54,6 +55,7 @@ impl CtrlReg1A {
 
 register! {
   /// CTRL_REG2_A
+  #[derive(Default)]
   pub struct CtrlReg2A: 0x21 {
     const DFC1  = 0b01000000;
     const DFC0  = 0b00100000;
@@ -65,6 +67,42 @@ register! {
 
     const DFC = Self::DFC1.bits | Self::DFC0.bits;
   }
+}
+
+register! {
+  /// CTRL_REG4_A
+  #[derive(Default)]
+  pub struct CtrlReg4A: 0x23 {
+    const BW2          = 0b10000000;
+    const BW1          = 0b01000000;
+    const FS1          = 0b00100000;
+    const FS0          = 0b00010000;
+    const BW_SCALE_ODR = 0b00001000;
+    const IF_ADD_INC   = 0b00000100;
+    const I2C_DISABLE  = 0b00000010;
+    const SIM          = 0b00000001;
+
+    const FS = Self::FS1.bits | Self::FS0.bits;
+  }
+}
+
+impl CtrlReg4A {
+    pub const fn scale(&self) -> AccelScale {
+        match self.intersection(Self::FS).bits() >> 4 {
+            0b00 => AccelScale::G2,
+            0b10 => AccelScale::G4,
+            0b11 => AccelScale::G8,
+            _ => unreachable!(),
+        }
+    }
+
+    pub const fn with_scale(self, scale: AccelScale) -> Self {
+        match scale {
+            AccelScale::G2 => self.difference(Self::FS),
+            AccelScale::G4 => self.union(Self::FS1).difference(Self::FS0),
+            AccelScale::G8 => self.union(Self::FS),
+        }
+    }
 }
 
 register! {
@@ -230,7 +268,8 @@ impl CtrlReg1M {
 
 register! {
   /// CTRL_REG2_M
-  pub struct CfgReg2M: 0x21 {
+  #[derive(Default)]
+  pub struct CtrlReg2M: 0x21 {
     const FS1      = 0b01000000;
     const FS0      = 0b00100000;
     const REBOOT   = 0b00001000;
@@ -251,6 +290,12 @@ register! {
 
     const MD = Self::MD1.bits | Self::MD0.bits;
   }
+}
+
+impl Default for CtrlReg3M {
+    fn default() -> Self {
+        Self::MD
+    }
 }
 
 impl CtrlReg3M {
@@ -278,6 +323,7 @@ impl CtrlReg3M {
 
 register! {
   /// CTRL_REG5_M
+  #[derive(Default)]
   pub struct CtrlReg5M: 0x24 {
     const BDU = 0b01000000;
   }

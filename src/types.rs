@@ -415,13 +415,13 @@ impl AccelMode {
 /// Accelerometer scaling factor
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AccelScale {
-    /// Plus or minus 2g
+    /// ±2*g*
     G2 = 2,
-    /// Plus or minus 4g
+    /// ±4*g*
     G4 = 4,
-    /// Plus or minus 8g
+    /// ±8*g*
     G8 = 8,
-    /// Plus or minus 16g
+    /// ±16*g*
     G16 = 16,
 }
 
