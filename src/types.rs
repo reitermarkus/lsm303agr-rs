@@ -15,12 +15,12 @@ pub enum Error<CommE, PinE> {
     InvalidInputData,
 }
 
-/// All possible errors in this crate
+/// Error when changing operating mode.
 #[derive(Debug)]
 pub struct ModeChangeError<CommE, PinE, DEV> {
-    /// I²C / SPI communication error
+    /// Inner error.
     pub error: Error<CommE, PinE>,
-    /// Original device without mode changed
+    /// Original device without mode changed.
     pub dev: DEV,
 }
 
