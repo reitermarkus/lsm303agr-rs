@@ -1,4 +1,4 @@
-use crate::types::{
+use super::types::{
     AccelOutputDataRate, AccelScale, AccelerometerId, FifoMode, Interrupt, MagMode,
     MagOutputDataRate, MagnetometerId, StatusFlags,
 };

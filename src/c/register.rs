@@ -3,8 +3,8 @@
 use crate::register_address::register;
 
 use super::types::{
-    AccelOutputDataRate, AccelScale, AccelerometerId, FifoMode, MagMode, MagOutputDataRate,
-    MagnetometerId, StatusFlags,
+    AccelOutputDataRate, AccelScale, AccelerometerId, FifoMode, Interrupt, MagMode,
+    MagOutputDataRate, MagnetometerId, StatusFlags,
 };
 
 register! {
@@ -82,6 +82,30 @@ register! {
     const INT_XL_FTH   = 0b00000010;
     const INT_XL_DRDY  = 0b00000001;
   }
+}
+
+impl CtrlReg3A {
+    pub const fn with_interrupt(self, interrupt: Interrupt) -> Self {
+        match interrupt {
+            Interrupt::Inactivity => self.union(Self::INT_XL_INACT),
+            Interrupt::Ig2 => self.union(Self::INT_XL_IG2),
+            Interrupt::Ig1 => self.union(Self::INT_XL_IG1),
+            Interrupt::FifoOverrun => self.union(Self::INT_XL_OVR),
+            Interrupt::FifoThreshold => self.union(Self::INT_XL_FTH),
+            Interrupt::DataReady => self.union(Self::INT_XL_DRDY),
+        }
+    }
+
+    pub const fn without_interrupt(self, interrupt: Interrupt) -> Self {
+        match interrupt {
+            Interrupt::Inactivity => self.difference(Self::INT_XL_INACT),
+            Interrupt::Ig2 => self.difference(Self::INT_XL_IG2),
+            Interrupt::Ig1 => self.difference(Self::INT_XL_IG1),
+            Interrupt::FifoOverrun => self.difference(Self::INT_XL_OVR),
+            Interrupt::FifoThreshold => self.difference(Self::INT_XL_FTH),
+            Interrupt::DataReady => self.difference(Self::INT_XL_DRDY),
+        }
+    }
 }
 
 register! {
@@ -230,6 +254,7 @@ register! {
 
 register! {
   /// IG_CFG1_A
+  #[derive(Default)]
   pub struct IgCfg1A: 0x30 {
     const AOI       = 0b10000000;
     const D6        = 0b01000000;
@@ -244,6 +269,7 @@ register! {
 
 register! {
   /// IG_SRC1_A
+  #[derive(Default)]
   pub struct IgSrc1A: 0x31 {
     const IA = 0b01000000;
     const ZH = 0b00100000;
@@ -415,4 +441,25 @@ register! {
 register! {
   /// STATUS_REG_M
   pub type StatusRegM: 0x27 = StatusFlags;
+}
+
+register! {
+  /// INT_CFG_M
+  pub struct IntCfgM: 0x30 {
+    const XIEN = 0b10000000;
+    const YIEN = 0b01000000;
+    const ZIEN = 0b00100000;
+
+    const _1   = 0b00001000;
+
+    const IEA  = 0b00000100;
+    const IEL  = 0b00000010;
+    const IEN  = 0b00000001;
+  }
+}
+
+impl Default for IntCfgM {
+    fn default() -> Self {
+        Self::_1
+    }
 }

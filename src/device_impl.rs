@@ -22,31 +22,12 @@ mod magnetometer;
 
 mod fifo;
 
+mod interrupts;
+
 impl<DI, CommE, PinE, MODE> Lsm303agr<DI, MODE>
 where
     DI: ReadData<Error = Error<CommE, PinE>> + WriteData<Error = Error<CommE, PinE>>,
 {
-    /// Enable accelerometer interrupt.
-    pub fn acc_enable_interrupt(&mut self, interrupt: Interrupt) -> Result<(), Error<CommE, PinE>> {
-        let reg3 = self.ctrl_reg3_a.with_interrupt(interrupt);
-        self.iface.write_accel_register(reg3)?;
-        self.ctrl_reg3_a = reg3;
-
-        Ok(())
-    }
-
-    /// Disable accelerometer interrupt.
-    pub fn acc_disable_interrupt(
-        &mut self,
-        interrupt: Interrupt,
-    ) -> Result<(), Error<CommE, PinE>> {
-        let reg3 = self.ctrl_reg3_a.without_interrupt(interrupt);
-        self.iface.write_accel_register(reg3)?;
-        self.ctrl_reg3_a = reg3;
-
-        Ok(())
-    }
-
     /// Reboot accelerometer memory content.
     pub fn acc_reboot_mem(&mut self) -> Result<(), Error<CommE, PinE>> {
         let reg5 = self.ctrl_reg5_a | CtrlReg5A::BOOT;
@@ -93,24 +74,6 @@ where
         self.cfg_reg_a_m = rega;
         self.cfg_reg_b_m = Default::default();
         self.cfg_reg_c_m = Default::default();
-
-        Ok(())
-    }
-
-    /// Configure the DRDY pin as a digital output.
-    pub fn mag_enable_interrupt(&mut self) -> Result<(), Error<CommE, PinE>> {
-        let regc = self.cfg_reg_c_m.union(CfgRegCM::INT_MAG);
-        self.iface.write_mag_register(regc)?;
-        self.cfg_reg_c_m = regc;
-
-        Ok(())
-    }
-
-    /// Unconfigure the DRDY pin as a digital output.
-    pub fn mag_disable_interrupt(&mut self) -> Result<(), Error<CommE, PinE>> {
-        let regc = self.cfg_reg_c_m.difference(CfgRegCM::INT_MAG);
-        self.iface.write_mag_register(regc)?;
-        self.cfg_reg_c_m = regc;
 
         Ok(())
     }

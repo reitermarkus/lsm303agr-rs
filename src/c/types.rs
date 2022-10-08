@@ -105,3 +105,20 @@ pub enum FifoMode {
     /// Bypass-to-FIFO mode
     BypassToFifo,
 }
+
+/// An interrupt.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Interrupt {
+    /// Inactivity interrupt on `INT_XL` pin.
+    Inactivity,
+    /// Interrupt generator 2 on `INT_XL` pin.
+    Ig2,
+    /// Interrupt generator 1 on `INT_XL` pin.
+    Ig1,
+    /// FIFO overrun interrupt on `INT_XL` pin.
+    FifoOverrun,
+    /// FIFO threshold signal on `INT_XL` pin.
+    FifoThreshold,
+    /// Data ready signal on `INT_XL` pin.
+    DataReady,
+}
