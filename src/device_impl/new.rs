@@ -1,12 +1,16 @@
 use super::*;
 
 macro_rules! impl_new {
-    ($Lsm:ident, $($field:ident,)*) => {
+    ($Lsm:ident, $ACC_ADDR:expr, $MAG_ADDR:expr, $($field:ident,)*) => {
         impl<I2C> $Lsm<I2cInterface<I2C>, mode::MagOneShot> {
             /// Create new instance of the LSM303AGR device communicating through I2C.
             pub fn new_with_i2c(i2c: I2C) -> Self {
                 Self {
-                    iface: I2cInterface { i2c },
+                    iface: I2cInterface {
+                        i2c,
+                        acc_addr: $ACC_ADDR,
+                        mag_addr: $MAG_ADDR
+                    },
                     $(
                         $field: Default::default(),
                     )*
@@ -52,6 +56,8 @@ macro_rules! impl_new {
 
 impl_new!(
     Lsm303agr,
+    agr::ACC_ADDR,
+    agr::MAG_ADDR,
     ctrl_reg1_a,
     ctrl_reg3_a,
     ctrl_reg4_a,
@@ -65,6 +71,8 @@ impl_new!(
 
 impl_new!(
     Lsm303c,
+    c::ACC_ADDR,
+    c::MAG_ADDR,
     ctrl_reg1_a,
     ctrl_reg2_a,
     ctrl_reg3_a,
@@ -74,6 +82,7 @@ impl_new!(
     ctrl_reg1_m,
     ctrl_reg2_m,
     ctrl_reg3_m,
+    ctrl_reg4_m,
     ctrl_reg5_m,
     fifo_ctrl,
     int_reg_m,

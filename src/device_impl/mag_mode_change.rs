@@ -82,6 +82,7 @@ impl_mag_mode_change!(
     ig_cfg1_a,
     ctrl_reg1_m,
     ctrl_reg2_m,
+    ctrl_reg4_m,
     ctrl_reg5_m,
     fifo_ctrl,
     int_reg_m,

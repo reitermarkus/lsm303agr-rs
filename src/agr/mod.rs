@@ -11,6 +11,9 @@ pub use types::{
     AccelMode, AccelOutputDataRate, AccelScale, FifoMode, Interrupt, MagMode, MagOutputDataRate,
 };
 
+pub(crate) const ACC_ADDR: u8 = 0b001_1001;
+pub(crate) const MAG_ADDR: u8 = 0b001_1110;
+
 /// An LSM303AGR accelerometer and magnetometer.
 #[derive(Debug)]
 pub struct Lsm303agr<DI, MODE> {

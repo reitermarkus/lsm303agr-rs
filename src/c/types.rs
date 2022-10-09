@@ -71,6 +71,7 @@ pub enum AccelScale {
 }
 
 /// Magnetometer mode
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MagMode {
     /// Low-power mode
     LowPower,
@@ -83,6 +84,7 @@ pub enum MagMode {
 }
 
 /// Magnetometer output data rate
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MagOutputDataRate {
     /// 0.625 Hz
     Hz0_625,

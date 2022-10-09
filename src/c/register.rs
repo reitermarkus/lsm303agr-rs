@@ -313,7 +313,7 @@ impl Default for CtrlReg1M {
 }
 
 impl CtrlReg1M {
-    pub const fn mode(&self) -> MagMode {
+    pub const fn xy_mode(&self) -> MagMode {
         match (self.intersects(Self::OM1), self.intersects(Self::OM0)) {
             (false, false) => MagMode::LowPower,
             (false, true) => MagMode::MediumPerformance,
@@ -322,7 +322,7 @@ impl CtrlReg1M {
         }
     }
 
-    pub const fn with_mode(self, mode: MagMode) -> Self {
+    pub const fn with_xy_mode(self, mode: MagMode) -> Self {
         let this = self.difference(Self::OM);
 
         match mode {
@@ -423,11 +423,36 @@ impl CtrlReg3M {
 
 register! {
   /// CTRL_REG4_M
+  #[derive(Default)]
   pub struct CtrlReg4M: 0x24 {
     const OMZ1 = 0b00001000;
     const OMZ0 = 0b00000100;
     const BLE  = 0b00000010;
+
+    const OMZ = Self::OMZ1.bits | Self::OMZ0.bits;
   }
+}
+
+impl CtrlReg4M {
+    pub const fn z_mode(&self) -> MagMode {
+        match (self.intersects(Self::OMZ1), self.intersects(Self::OMZ0)) {
+            (false, false) => MagMode::LowPower,
+            (false, true) => MagMode::MediumPerformance,
+            (true, false) => MagMode::HighPerformance,
+            (true, true) => MagMode::UltraHighPerformance,
+        }
+    }
+
+    pub const fn with_z_mode(self, mode: MagMode) -> Self {
+        let this = self.difference(Self::OMZ);
+
+        match mode {
+            MagMode::LowPower => this,
+            MagMode::MediumPerformance => self.union(Self::OMZ0),
+            MagMode::HighPerformance => self.union(Self::OMZ1),
+            MagMode::UltraHighPerformance => self.union(Self::OMZ1).union(Self::OMZ0),
+        }
+    }
 }
 
 register! {

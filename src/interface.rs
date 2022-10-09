@@ -11,13 +11,12 @@ use crate::{
     Error,
 };
 
-pub(crate) const ACCEL_ADDR: u8 = 0b001_1001;
-pub(crate) const MAG_ADDR: u8 = 0b001_1110;
-
 /// I2C interface
 #[derive(Debug)]
 pub struct I2cInterface<I2C> {
     pub(crate) i2c: I2C,
+    pub(crate) acc_addr: u8,
+    pub(crate) mag_addr: u8,
 }
 
 /// SPI interface
@@ -46,12 +45,12 @@ where
 
     fn write_accel_register<R: RegWrite>(&mut self, reg: R) -> Result<(), Self::Error> {
         let payload: [u8; 2] = [R::ADDR, reg.data()];
-        self.i2c.write(ACCEL_ADDR, &payload).map_err(Error::Comm)
+        self.i2c.write(self.acc_addr, &payload).map_err(Error::Comm)
     }
 
     fn write_mag_register<R: RegWrite>(&mut self, reg: R) -> Result<(), Self::Error> {
         let payload: [u8; 2] = [R::ADDR, reg.data()];
-        self.i2c.write(MAG_ADDR, &payload).map_err(Error::Comm)
+        self.i2c.write(self.mag_addr, &payload).map_err(Error::Comm)
     }
 }
 
@@ -115,31 +114,31 @@ where
     type Error = Error<E, ()>;
 
     fn read_accel_register<R: RegRead>(&mut self) -> Result<R::Output, Self::Error> {
-        self.read_register::<R>(ACCEL_ADDR)
+        self.read_register::<R>(self.acc_addr)
     }
 
     fn read_mag_register<R: RegRead>(&mut self) -> Result<R::Output, Self::Error> {
-        self.read_register::<R>(MAG_ADDR)
+        self.read_register::<R>(self.mag_addr)
     }
 
     fn read_accel_double_register<R: RegRead<u16>>(&mut self) -> Result<R::Output, Self::Error> {
-        self.read_double_register::<R>(ACCEL_ADDR)
+        self.read_double_register::<R>(self.acc_addr)
     }
 
     fn read_mag_double_register<R: RegRead<u16>>(&mut self) -> Result<R::Output, Self::Error> {
-        self.read_double_register::<R>(ACCEL_ADDR)
+        self.read_double_register::<R>(self.acc_addr)
     }
 
     fn read_accel_3_double_registers<R: RegRead<(u16, u16, u16)>>(
         &mut self,
     ) -> Result<R::Output, Self::Error> {
-        self.read_3_double_registers::<R>(ACCEL_ADDR)
+        self.read_3_double_registers::<R>(self.acc_addr)
     }
 
     fn read_mag_3_double_registers<R: RegRead<(u16, u16, u16)>>(
         &mut self,
     ) -> Result<R::Output, Self::Error> {
-        self.read_3_double_registers::<R>(MAG_ADDR)
+        self.read_3_double_registers::<R>(self.mag_addr)
     }
 }
 

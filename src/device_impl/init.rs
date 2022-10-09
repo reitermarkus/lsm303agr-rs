@@ -15,7 +15,9 @@ macro_rules! impl_init {
             pub fn init(&mut self) -> Result<(), Error<CommE, PinE>> {
                 self.acc_enable_bdu()?;
                 self.mag_enable_bdu()?;
-                self.enable_temp()
+                self.enable_temp()?;
+                self.enable_acc()?;
+                self.enable_mag()
             }
 
             /// Enable block data update for accelerometer.
@@ -64,3 +66,40 @@ impl_init!(
     ctrl_reg5_m: c::register::CtrlReg5M,
     ctrl_reg1_m: c::register::CtrlReg1M,
 );
+
+impl<DI, CommE, PinE, MODE> Lsm303agr<DI, MODE>
+where
+    DI: WriteData<Error = Error<CommE, PinE>>,
+{
+    fn enable_acc(&mut self) -> Result<(), Error<CommE, PinE>> {
+        Ok(())
+    }
+
+    fn enable_mag(&mut self) -> Result<(), Error<CommE, PinE>> {
+        Ok(())
+    }
+}
+
+impl<DI, CommE, PinE, MODE> Lsm303c<DI, MODE>
+where
+    DI: WriteData<Error = Error<CommE, PinE>>,
+{
+    fn enable_acc(&mut self) -> Result<(), Error<CommE, PinE>> {
+        // Enable address auto-increment for multi-byte reads.
+        let reg = self.ctrl_reg4_a.union(c::register::CtrlReg4A::IF_ADD_INC);
+        self.iface.write_accel_register(reg)?;
+        self.ctrl_reg4_a = reg;
+        Ok(())
+    }
+
+    fn enable_mag(&mut self) -> Result<(), Error<CommE, PinE>> {
+        // Initialize scale to ±16 gauss (since this is the only possible option).
+        let reg = self
+            .ctrl_reg2_m
+            .union(c::register::CtrlReg2M::FS1)
+            .union(c::register::CtrlReg2M::FS0);
+        self.iface.write_mag_register(reg)?;
+        self.ctrl_reg2_m = reg;
+        Ok(())
+    }
+}

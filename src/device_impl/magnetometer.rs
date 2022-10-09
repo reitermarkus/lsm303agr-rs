@@ -9,53 +9,95 @@ use crate::{
     Error, MagneticField,
 };
 
-macro_rules! impl_mag {
-    ($Lsm:ident, $MODE:ty, $ODR:ty, $power_mode_reg_field:ident, $conversion_mode_reg_field:ident $(, $offset_cancellation_field:ident: $offset_cancellation_reg:ident)?) => {
-        impl<DI, CommE, PinE, MODE> $Lsm<DI, MODE>
-        where
-            DI: ReadData<Error = Error<CommE, PinE>> + WriteData<Error = Error<CommE, PinE>>,
-        {
-            /// Set magnetometer power/resolution mode and output data rate.
-            ///
-            #[doc = include_str!("delay.md")]
-            pub fn set_mag_mode_and_odr<D: DelayUs<u32>>(
-                &mut self,
-                delay: &mut D,
-                mode: $MODE,
-                odr: $ODR,
-            ) -> Result<(), Error<CommE, PinE>> {
-                let reg = self.$power_mode_reg_field;
+impl<DI, CommE, PinE, MODE> Lsm303agr<DI, MODE>
+where
+    DI: ReadData<Error = Error<CommE, PinE>> + WriteData<Error = Error<CommE, PinE>>,
+{
+    /// Set magnetometer power/resolution mode and output data rate.
+    ///
+    #[doc = include_str!("delay.md")]
+    pub fn set_mag_mode_and_odr<D: DelayUs<u32>>(
+        &mut self,
+        delay: &mut D,
+        mode: agr::MagMode,
+        odr: agr::MagOutputDataRate,
+    ) -> Result<(), Error<CommE, PinE>> {
+        let reg = self.cfg_reg_a_m;
 
-                #[allow(unused)]
-                let old_mode = reg.mode();
-                #[allow(unused)]
-                let old_odr = reg.odr();
+        let old_mode = reg.mode();
+        let old_odr = reg.odr();
 
-                let reg = reg.with_mode(mode).with_odr(odr);
-                self.iface.write_mag_register(reg)?;
-                self.$power_mode_reg_field = reg;
+        let reg = reg.with_mode(mode).with_odr(odr);
+        self.iface.write_mag_register(reg)?;
+        self.cfg_reg_a_m = reg;
 
-                $(
-                    let offset_cancellation = self.$offset_cancellation_field.offset_cancellation();
-                    if old_mode != mode {
-                        delay.delay_us(reg.turn_on_time_us(offset_cancellation));
-                    } else if old_odr != odr && offset_cancellation {
-                        // Mode did not change, so only wait for 1/ODR ms.
-                        delay.delay_us(odr.turn_on_time_us_frac_1());
-                    }
-                )*
-
-                drop(delay);
-
-                Ok(())
-            }
-
-            /// Get magnetometer power/resolution mode.
-            pub fn get_mag_mode(&self) -> $MODE {
-                self.$power_mode_reg_field.mode()
-            }
+        let offset_cancellation = self.cfg_reg_b_m.offset_cancellation();
+        if old_mode != mode {
+            delay.delay_us(reg.turn_on_time_us(offset_cancellation));
+        } else if old_odr != odr && offset_cancellation {
+            // Mode did not change, so only wait for 1/ODR ms.
+            delay.delay_us(odr.turn_on_time_us_frac_1());
         }
 
+        Ok(())
+    }
+
+    /// Get magnetometer power/resolution mode.
+    pub fn get_mag_mode(&self) -> agr::MagMode {
+        self.cfg_reg_a_m.mode()
+    }
+}
+
+impl<DI, CommE, PinE, MODE> Lsm303c<DI, MODE>
+where
+    DI: ReadData<Error = Error<CommE, PinE>> + WriteData<Error = Error<CommE, PinE>>,
+{
+    /// Set magnetometer power/resolution mode and output data rate.
+    ///
+    #[doc = include_str!("delay.md")]
+    pub fn set_mag_mode_and_odr<D: DelayUs<u32>>(
+        &mut self,
+        delay: &mut D,
+        mode: c::MagMode,
+        odr: c::MagOutputDataRate,
+    ) -> Result<(), Error<CommE, PinE>> {
+        let xy_reg = self.ctrl_reg1_m;
+        let z_reg = self.ctrl_reg4_m;
+
+        let old_xy_mode = xy_reg.xy_mode();
+        let old_z_mode = z_reg.z_mode();
+        let old_odr = xy_reg.odr();
+
+        let xy_reg = xy_reg.with_xy_mode(mode).with_odr(odr);
+        self.iface.write_mag_register(xy_reg)?;
+        self.ctrl_reg1_m = xy_reg;
+
+        let z_reg = z_reg.with_z_mode(mode);
+        self.iface.write_mag_register(z_reg)?;
+        self.ctrl_reg4_m = z_reg;
+
+        if old_xy_mode != old_z_mode || old_xy_mode != mode || old_z_mode != mode || old_odr != odr
+        {
+            delay.delay_us(100_000);
+        }
+
+        Ok(())
+    }
+
+    /// Get magnetometer power/resolution mode.
+    pub fn get_mag_mode(&self) -> c::MagMode {
+        self.ctrl_reg1_m.xy_mode()
+    }
+}
+
+macro_rules! impl_mag {
+    (
+        $Lsm:ident,
+        $MODE:ty, $ODR:ty,
+        $power_mode_reg_field:ident,
+        $conversion_mode_reg_field:ident
+        $(, $offset_cancellation_field:ident: $offset_cancellation_reg:ident)?
+    ) => {
         impl<DI, CommE, PinE> $Lsm<DI, mode::MagContinuous>
         where
             DI: ReadData<Error = Error<CommE, PinE>> + WriteData<Error = Error<CommE, PinE>>,
