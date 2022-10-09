@@ -27,7 +27,8 @@ macro_rules! impl_device {
         $Lsm:ident,
         $StatusRegA:ty, $WhoAmIA:ty,
         $StatusRegM:ty, $WhoAmIM:ty,
-        $temp_method:ident, $TempReg:ty,
+        $AccelerationReg:ty,
+        $temp_method:ident: $TempReg:ty,
     ) => {
         impl<DI, CommE, PinE, MODE> $Lsm<DI, MODE>
         where
@@ -42,7 +43,9 @@ macro_rules! impl_device {
 
             /// Get measured acceleration.
             pub fn acceleration(&mut self) -> Result<Acceleration, Error<CommE, PinE>> {
-                let (x, y, z) = self.iface.read_accel_3_double_registers::<Acceleration>()?;
+                let (x, y, z) = self
+                    .iface
+                    .read_accel_3_double_registers::<$AccelerationReg>()?;
 
                 let mode = self.get_accel_mode();
                 let scale = self.get_accel_scale();
@@ -91,8 +94,8 @@ impl_device!(
     agr::register::WhoAmIA,
     agr::register::StatusRegM,
     agr::register::WhoAmIM,
-    read_accel_double_register,
-    agr::register::OutTempLA,
+    agr::register::OutXLA,
+    read_accel_double_register: agr::register::OutTempLA,
 );
 
 impl_device!(
@@ -101,8 +104,8 @@ impl_device!(
     c::register::WhoAmIA,
     c::register::StatusRegM,
     c::register::WhoAmIM,
-    read_mag_double_register,
-    c::register::TempLM,
+    c::register::OutXLA,
+    read_mag_double_register: c::register::TempLM,
 );
 
 impl<DI, CommE, PinE, MODE> Lsm303agr<DI, MODE>

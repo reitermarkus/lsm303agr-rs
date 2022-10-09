@@ -1,7 +1,5 @@
 use bitflags::bitflags;
 
-use crate::reg::RegRead;
-
 use super::register::StatusRegAuxA;
 
 /// All possible errors in this crate
@@ -65,18 +63,6 @@ pub struct Acceleration {
     pub(crate) z: u16,
     pub(crate) resolution_factor: i16,
     pub(crate) scaling_factor: u8,
-}
-
-impl RegRead<(u16, u16, u16)> for Acceleration {
-    type Output = (u16, u16, u16);
-
-    /// OUT_X_L_A
-    const ADDR: u8 = 0x28;
-
-    #[inline(always)]
-    fn from_data(data: (u16, u16, u16)) -> Self::Output {
-        data
-    }
 }
 
 impl Acceleration {
@@ -192,18 +178,6 @@ pub struct MagneticField {
     pub(crate) x: u16,
     pub(crate) y: u16,
     pub(crate) z: u16,
-}
-
-impl RegRead<(u16, u16, u16)> for MagneticField {
-    type Output = Self;
-
-    /// OUTX_L_REG_M
-    const ADDR: u8 = 0x68;
-
-    #[inline(always)]
-    fn from_data((x, y, z): (u16, u16, u16)) -> Self::Output {
-        Self { x, y, z }
-    }
 }
 
 impl MagneticField {

@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 use crate::reg::{register, RegRead};
-use crate::types::{AccelerometerId, MagnetometerId, StatusFlags, Temperature};
+use crate::types::{AccelerometerId, MagneticField, MagnetometerId, StatusFlags, Temperature};
 
 use super::types::{
     AccelOutputDataRate, AccelScale, FifoMode, Interrupt, MagMode, MagOutputDataRate,
@@ -183,6 +183,20 @@ register! {
 register! {
   /// STATUS_REG_A
   pub type StatusRegA: 0x27 = StatusFlags;
+}
+
+/// OUT_X_L_A (register `0x28`)
+pub struct OutXLA;
+
+impl RegRead<(u16, u16, u16)> for OutXLA {
+    type Output = (u16, u16, u16);
+
+    const ADDR: u8 = 0x28;
+
+    #[inline(always)]
+    fn from_data(data: (u16, u16, u16)) -> Self::Output {
+        data
+    }
 }
 
 register! {
@@ -466,6 +480,20 @@ register! {
 register! {
   /// STATUS_REG_M
   pub type StatusRegM: 0x27 = StatusFlags;
+}
+
+/// OUT_X_L_M
+pub struct OutXLM;
+
+impl RegRead<(u16, u16, u16)> for OutXLM {
+    type Output = MagneticField;
+
+    const ADDR: u8 = 0x28;
+
+    #[inline(always)]
+    fn from_data((x, y, z): (u16, u16, u16)) -> Self::Output {
+        MagneticField { x, y, z }
+    }
 }
 
 /// TEMP_L_M (register `0x2F`)

@@ -4,9 +4,7 @@ use crate::{
     agr::{self, Lsm303agr},
     c::{self, Lsm303c},
     interface::{ReadData, WriteData},
-    mode,
-    register::{CfgRegAM, CfgRegBM},
-    Error, MagneticField,
+    mode, Error, MagneticField,
 };
 
 impl<DI, CommE, PinE, MODE> Lsm303agr<DI, MODE>
@@ -94,9 +92,10 @@ macro_rules! impl_mag {
     (
         $Lsm:ident,
         $MODE:ty, $ODR:ty,
+        $MagneticFieldReg:ty,
         $power_mode_reg_field:ident,
-        $conversion_mode_reg_field:ident
-        $(, $offset_cancellation_field:ident: $offset_cancellation_reg:ident)?
+        $conversion_mode_reg_field:ident: $conversion_mode_reg:ty,
+        $($offset_cancellation_field:ident: $offset_cancellation_reg:ty)?
     ) => {
         impl<DI, CommE, PinE> $Lsm<DI, mode::MagContinuous>
         where
@@ -104,7 +103,7 @@ macro_rules! impl_mag {
         {
             /// Get the measured magnetic field.
             pub fn magnetic_field(&mut self) -> Result<MagneticField, Error<CommE, PinE>> {
-                self.iface.read_mag_3_double_registers::<MagneticField>()
+                self.iface.read_mag_3_double_registers::<$MagneticFieldReg>()
             }
 
             $(
@@ -116,7 +115,7 @@ macro_rules! impl_mag {
                 #[doc = concat!("[`disable_mag_offset_cancellation`](", stringify!($Lsm), "::disable_mag_offset_cancellation)")]
                 /// function.
                 pub fn enable_mag_offset_cancellation(&mut self) -> Result<(), Error<CommE, PinE>> {
-                    let reg = self.$offset_cancellation_field | $offset_cancellation_reg::OFF_CANC;
+                    let reg = self.$offset_cancellation_field | <$offset_cancellation_reg>::OFF_CANC;
 
                     self.iface.write_mag_register(reg)?;
                     self.$offset_cancellation_field = reg;
@@ -126,7 +125,7 @@ macro_rules! impl_mag {
 
                 /// Disable the magnetometer's built in offset cancellation.
                 pub fn disable_mag_offset_cancellation(&mut self) -> Result<(), Error<CommE, PinE>> {
-                    let reg = self.$offset_cancellation_field & !$offset_cancellation_reg::OFF_CANC;
+                    let reg = self.$offset_cancellation_field & !<$offset_cancellation_reg>::OFF_CANC;
 
                     self.iface.write_mag_register(reg)?;
                     self.$offset_cancellation_field = reg;
@@ -144,9 +143,9 @@ macro_rules! impl_mag {
             pub fn magnetic_field(&mut self) -> nb::Result<MagneticField, Error<CommE, PinE>> {
                 let status = self.mag_status()?;
                 if status.xyz_new_data() {
-                    Ok(self.iface.read_mag_3_double_registers::<MagneticField>()?)
+                    Ok(self.iface.read_mag_3_double_registers::<$MagneticFieldReg>()?)
                 } else {
-                    let cfg = self.iface.read_mag_register::<CfgRegAM>()?;
+                    let cfg = self.iface.read_mag_register::<$conversion_mode_reg>()?;
                     if !cfg.is_single_mode() {
                         // Switch to single mode.
                         let cfg = self.$conversion_mode_reg_field.single_mode();
@@ -168,8 +167,8 @@ macro_rules! impl_mag {
                 /// function.
                 pub fn enable_mag_offset_cancellation(&mut self) -> Result<(), Error<CommE, PinE>> {
                     let reg = self.$offset_cancellation_field
-                        .union($offset_cancellation_reg::OFF_CANC)
-                        .union($offset_cancellation_reg::OFF_CANC_ONE_SHOT);
+                        .union(<$offset_cancellation_reg>::OFF_CANC)
+                        .union(<$offset_cancellation_reg>::OFF_CANC_ONE_SHOT);
 
                     self.iface.write_mag_register(reg)?;
                     self.$offset_cancellation_field = reg;
@@ -180,8 +179,8 @@ macro_rules! impl_mag {
                 /// Disable the magnetometer's built in offset cancellation.
                 pub fn disable_mag_offset_cancellation(&mut self) -> Result<(), Error<CommE, PinE>> {
                     let reg = self.$offset_cancellation_field
-                        .difference($offset_cancellation_reg::OFF_CANC)
-                        .difference($offset_cancellation_reg::OFF_CANC_ONE_SHOT);
+                        .difference(<$offset_cancellation_reg>::OFF_CANC)
+                        .difference(<$offset_cancellation_reg>::OFF_CANC_ONE_SHOT);
 
                     self.iface.write_mag_register(reg)?;
                     self.$offset_cancellation_field = reg;
@@ -197,15 +196,17 @@ impl_mag!(
     Lsm303agr,
     agr::MagMode,
     agr::MagOutputDataRate,
+    agr::register::OutxLRegM,
     cfg_reg_a_m,
-    cfg_reg_a_m,
-    cfg_reg_b_m: CfgRegBM
+    cfg_reg_a_m: agr::register::CfgRegAM,
+    cfg_reg_b_m: agr::register::CfgRegBM
 );
 
 impl_mag!(
     Lsm303c,
     c::MagMode,
     c::MagOutputDataRate,
+    c::register::OutXLM,
     ctrl_reg1_m,
-    ctrl_reg3_m
+    ctrl_reg3_m: c::register::CtrlReg3M,
 );
