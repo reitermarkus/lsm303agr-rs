@@ -42,6 +42,7 @@ impl AccelOutputDataRate {
     }
 
     /// 1/ODR ms
+    #[inline]
     pub(crate) const fn turn_on_time_us_frac_1(&self) -> u32 {
         match self {
             Self::Hz1 => 1000,
@@ -58,6 +59,7 @@ impl AccelOutputDataRate {
     }
 
     /// 7/ODR ms
+    #[inline]
     pub(crate) const fn turn_on_time_us_frac_7(&self) -> u32 {
         match self {
             Self::Hz1 => 7000,

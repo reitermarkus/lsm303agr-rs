@@ -71,10 +71,12 @@ impl<DI, CommE, PinE, MODE> Lsm303agr<DI, MODE>
 where
     DI: WriteData<Error = Error<CommE, PinE>>,
 {
+    #[inline(always)]
     fn enable_acc(&mut self) -> Result<(), Error<CommE, PinE>> {
         Ok(())
     }
 
+    #[inline(always)]
     fn enable_mag(&mut self) -> Result<(), Error<CommE, PinE>> {
         Ok(())
     }
@@ -84,6 +86,7 @@ impl<DI, CommE, PinE, MODE> Lsm303c<DI, MODE>
 where
     DI: WriteData<Error = Error<CommE, PinE>>,
 {
+    #[inline(always)]
     fn enable_acc(&mut self) -> Result<(), Error<CommE, PinE>> {
         // Enable address auto-increment for multi-byte reads.
         let reg = self.ctrl_reg4_a.union(c::register::CtrlReg4A::IF_ADD_INC);
@@ -92,6 +95,7 @@ where
         Ok(())
     }
 
+    #[inline(always)]
     fn enable_mag(&mut self) -> Result<(), Error<CommE, PinE>> {
         // Initialize scale to ±16 gauss (since this is the only possible option).
         let reg = self

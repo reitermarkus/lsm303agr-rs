@@ -129,6 +129,7 @@ impl MagOutputDataRate {
     }
 
     /// 1/ODR ms
+    #[inline]
     pub(crate) const fn turn_on_time_us_frac_1(&self) -> u32 {
         match self {
             Self::Hz0_625 => 1600,
