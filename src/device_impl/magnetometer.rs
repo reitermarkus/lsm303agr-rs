@@ -68,10 +68,10 @@ where
 
         let xy_reg = xy_reg.with_xy_mode(mode).with_odr(odr);
         self.iface.write_mag_register(xy_reg)?;
-        self.ctrl_reg1_m = xy_reg;
-
         let z_reg = z_reg.with_z_mode(mode);
         self.iface.write_mag_register(z_reg)?;
+
+        self.ctrl_reg1_m = xy_reg;
         self.ctrl_reg4_m = z_reg;
 
         if old_xy_mode != mode || old_z_mode != mode || old_odr != odr {
@@ -83,7 +83,10 @@ where
 
     /// Get magnetometer power/resolution mode.
     pub fn get_mag_mode(&self) -> c::MagMode {
-        self.ctrl_reg1_m.xy_mode()
+        let xy_mode = self.ctrl_reg1_m.xy_mode();
+        let z_mode = self.ctrl_reg4_m.z_mode();
+        debug_assert_eq!(xy_mode, z_mode);
+        z_mode
     }
 }
 
