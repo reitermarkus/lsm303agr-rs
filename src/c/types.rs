@@ -127,6 +127,20 @@ impl MagOutputDataRate {
             return None;
         })
     }
+
+    /// 1/ODR ms
+    pub(crate) const fn turn_on_time_us_frac_1(&self) -> u32 {
+        match self {
+            Self::Hz0_625 => 1600,
+            Self::Hz1_25 => 800,
+            Self::Hz2_5 => 400,
+            Self::Hz5 => 200,
+            Self::Hz10 => 100,
+            Self::Hz20 => 50,
+            Self::Hz40 => 25,
+            Self::Hz80 => 13, // 12.5
+        }
+    }
 }
 
 /// A FIFO mode.

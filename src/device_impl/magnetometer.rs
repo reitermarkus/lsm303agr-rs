@@ -74,9 +74,8 @@ where
         self.iface.write_mag_register(z_reg)?;
         self.ctrl_reg4_m = z_reg;
 
-        if old_xy_mode != old_z_mode || old_xy_mode != mode || old_z_mode != mode || old_odr != odr
-        {
-            delay.delay_us(100_000);
+        if old_xy_mode != mode || old_z_mode != mode || old_odr != odr {
+            delay.delay_us(odr.turn_on_time_us_frac_1());
         }
 
         Ok(())

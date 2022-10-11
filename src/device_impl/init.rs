@@ -100,6 +100,12 @@ where
             .union(c::register::CtrlReg2M::FS0);
         self.iface.write_mag_register(reg)?;
         self.ctrl_reg2_m = reg;
+
+        // Enable both read and write operations over SPI.
+        let reg = self.ctrl_reg3_m.union(c::register::CtrlReg3M::SIM);
+        self.iface.write_mag_register(reg)?;
+        self.ctrl_reg3_m = reg;
+
         Ok(())
     }
 }
