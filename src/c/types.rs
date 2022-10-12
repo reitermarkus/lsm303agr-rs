@@ -1,3 +1,51 @@
+/// Accelerometer mode
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AccelMode {
+    /// Power down
+    PowerDown,
+    /// Normal mode (10-bit)
+    Normal,
+    /// High resolution (12-bit)
+    HighResolution,
+}
+
+impl AccelMode {
+    #[inline]
+    pub(crate) const fn turn_on_time_us(&self, odr: AccelOutputDataRate) -> u32 {
+        match self {
+            Self::PowerDown => 0,
+            Self::Normal => 1600,
+            Self::HighResolution => odr.turn_on_time_us_frac_7(),
+        }
+    }
+
+    #[inline]
+    pub(crate) const fn change_time_us(&self, other: AccelMode, odr: AccelOutputDataRate) -> u32 {
+        match (self, other) {
+            (Self::HighResolution, Self::Normal) => odr.turn_on_time_us_frac_1(),
+            (Self::Normal, Self::HighResolution) => odr.turn_on_time_us_frac_7(),
+            (Self::PowerDown, new_mode) => new_mode.turn_on_time_us(odr),
+            _ => 0,
+        }
+    }
+
+    pub(crate) const fn resolution_factor(&self) -> i16 {
+        match self {
+            Self::PowerDown => 1,
+            Self::HighResolution => 1 << 4,
+            Self::Normal => 1 << 6,
+        }
+    }
+
+    pub(crate) const fn scaling_factor(&self, scale: AccelScale) -> u8 {
+        match self {
+            Self::PowerDown => 0,
+            Self::HighResolution => scale as u8 / 2,
+            Self::Normal => scale as u8 * 2,
+        }
+    }
+}
+
 /// Accelerometer output data rate
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AccelOutputDataRate {
@@ -28,33 +76,30 @@ impl AccelOutputDataRate {
             _ => return None,
         })
     }
-}
 
-/// Accelerometer mode
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum AccelMode {
-    /// Power down
-    PowerDown,
-    /// Normal mode (10-bit)
-    Normal,
-    /// High resolution (12-bit)
-    HighResolution,
-}
-
-impl AccelMode {
-    pub(crate) const fn resolution_factor(&self) -> i16 {
+    /// 1/ODR ms
+    #[inline]
+    pub(crate) const fn turn_on_time_us_frac_1(&self) -> u32 {
         match self {
-            Self::PowerDown => 1,
-            Self::HighResolution => 1 << 4,
-            Self::Normal => 1 << 6,
+            Self::Hz10 => 100,
+            Self::Hz50 => 20,
+            Self::Hz100 => 10,
+            Self::Hz200 => 5,
+            Self::Hz400 => 3, //  2.5
+            Self::Hz800 => 2, // 1.25
         }
     }
 
-    pub(crate) const fn scaling_factor(&self, scale: AccelScale) -> u8 {
+    /// 7/ODR ms
+    #[inline]
+    pub(crate) const fn turn_on_time_us_frac_7(&self) -> u32 {
         match self {
-            Self::PowerDown => 0,
-            Self::HighResolution => scale as u8 / 2,
-            Self::Normal => scale as u8 * 2,
+            Self::Hz10 => 700,
+            Self::Hz50 => 140,
+            Self::Hz100 => 70,
+            Self::Hz200 => 35,
+            Self::Hz400 => 18, // 17.5
+            Self::Hz800 => 9,  // 8.75
         }
     }
 }

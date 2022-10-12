@@ -125,8 +125,9 @@ where
         self.ctrl_reg1_a = reg1;
         self.accel_odr = odr;
 
-        if old_mode == c::AccelMode::PowerDown && mode != c::AccelMode::PowerDown {
-            delay.delay_us(100_000);
+        if let Some(odr) = odr {
+            let change_time = old_mode.change_time_us(mode, odr);
+            delay.delay_us(change_time);
         }
 
         Ok(())

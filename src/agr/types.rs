@@ -90,6 +90,7 @@ pub enum AccelMode {
 }
 
 impl AccelMode {
+    #[inline]
     pub(crate) const fn turn_on_time_us(&self, odr: AccelOutputDataRate) -> u32 {
         match self {
             Self::PowerDown => 0,
@@ -99,6 +100,7 @@ impl AccelMode {
         }
     }
 
+    #[inline]
     pub(crate) const fn change_time_us(&self, other: AccelMode, odr: AccelOutputDataRate) -> u32 {
         match (self, other) {
             (Self::HighResolution, Self::LowPower) => odr.turn_on_time_us_frac_1(),
