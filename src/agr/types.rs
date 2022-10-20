@@ -41,6 +41,22 @@ impl AccelOutputDataRate {
         })
     }
 
+    /// Get the frequency in Hertz.
+    pub const fn to_hertz(&self) -> u16 {
+        match self {
+            Self::Hz1 => 1,
+            Self::Hz10 => 10,
+            Self::Hz25 => 25,
+            Self::Hz50 => 50,
+            Self::Hz100 => 100,
+            Self::Hz200 => 200,
+            Self::Hz400 => 400,
+            Self::Khz1_344 => 1344,
+            Self::Khz1_620LowPower => 1620,
+            Self::Khz5_376LowPower => 5376,
+        }
+    }
+
     /// 1/ODR ms
     #[inline]
     pub(crate) const fn turn_on_time_us_frac_1(&self) -> u32 {
@@ -169,6 +185,16 @@ impl MagOutputDataRate {
             100 => Self::Hz100,
             _ => return None,
         })
+    }
+
+    /// Get the frequency in Hertz.
+    pub const fn to_hertz(&self) -> u16 {
+        match self {
+            Self::Hz10 => 10,
+            Self::Hz20 => 20,
+            Self::Hz50 => 50,
+            Self::Hz100 => 100,
+        }
     }
 
     /// 1/ODR ms
