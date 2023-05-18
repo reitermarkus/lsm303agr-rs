@@ -381,7 +381,7 @@ impl CfgRegAM {
     }
 
     pub const fn idle_mode(self) -> Self {
-        self.union(Self::MD1).union(Self::MD0) // 0b11
+        self.union(Self::MD1) // 0b10 or 0b11
     }
 
     pub const fn odr(&self) -> MagOutputDataRate {
