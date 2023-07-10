@@ -1,3 +1,5 @@
+use crate::types::{AccelerationFactor, ResolutionFactor, ScalingFactor};
+
 /// Accelerometer mode
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AccelMode {
@@ -29,19 +31,35 @@ impl AccelMode {
         }
     }
 
-    pub(crate) const fn resolution_factor(&self) -> i16 {
+    pub(crate) const fn factor(&self, scale: AccelScale) -> AccelerationFactor {
+        AccelerationFactor::new(self.resolution_factor(), self.scaling_factor(scale))
+    }
+
+    const fn resolution_factor(&self) -> ResolutionFactor {
+        use ResolutionFactor::*;
+
         match self {
-            Self::PowerDown => 1,
-            Self::HighResolution => 1 << 4,
-            Self::Normal => 1 << 6,
+            Self::PowerDown => R1,
+            Self::HighResolution => R16,
+            Self::Normal => R64,
         }
     }
 
-    pub(crate) const fn scaling_factor(&self, scale: AccelScale) -> u8 {
+    const fn scaling_factor(&self, scale: AccelScale) -> ScalingFactor {
+        use ScalingFactor::*;
+
         match self {
-            Self::PowerDown => 0,
-            Self::HighResolution => scale as u8 / 2,
-            Self::Normal => scale as u8 * 2,
+            Self::PowerDown => S0,
+            Self::HighResolution => match scale {
+                AccelScale::G2 => S1,
+                AccelScale::G4 => S2,
+                AccelScale::G8 => S4,
+            },
+            Self::Normal => match scale {
+                AccelScale::G2 => S4,
+                AccelScale::G4 => S8,
+                AccelScale::G8 => S16,
+            },
         }
     }
 }
@@ -120,11 +138,11 @@ impl AccelOutputDataRate {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AccelScale {
     /// ±2*g*
-    G2 = 2,
+    G2,
     /// ±4*g*
-    G4 = 4,
+    G4,
     /// ±8*g*
-    G8 = 8,
+    G8,
 }
 
 /// Magnetometer mode

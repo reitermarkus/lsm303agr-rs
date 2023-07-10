@@ -54,8 +54,7 @@ macro_rules! impl_device {
                     x,
                     y,
                     z,
-                    resolution_factor: mode.resolution_factor(),
-                    scaling_factor: mode.scaling_factor(scale),
+                    factor: mode.factor(scale),
                 })
             }
 

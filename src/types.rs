@@ -55,14 +55,76 @@ impl AccelerometerId {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ResolutionFactor {
+    R1,
+    R16,
+    R64,
+    R256,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ScalingFactor {
+    S0,
+    S1,
+    S2,
+    S4,
+    S8,
+    S16,
+    S32,
+    S64,
+    S128,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct AccelerationFactor {
+    resolution_factor: ResolutionFactor,
+    scaling_factor: ScalingFactor,
+}
+
+impl AccelerationFactor {
+    pub const fn new(resolution_factor: ResolutionFactor, scaling_factor: ScalingFactor) -> Self {
+        Self {
+            resolution_factor,
+            scaling_factor,
+        }
+    }
+
+    pub const fn resolution(self) -> i16 {
+        use ResolutionFactor::*;
+
+        match self.resolution_factor {
+            R1 => 1,
+            R16 => 16,
+            R64 => 64,
+            R256 => 256,
+        }
+    }
+
+    pub const fn scaling(self) -> i32 {
+        use ScalingFactor::*;
+
+        match self.scaling_factor {
+            S0 => 0,
+            S1 => 1,
+            S2 => 2,
+            S4 => 4,
+            S8 => 8,
+            S16 => 16,
+            S32 => 32,
+            S64 => 64,
+            S128 => 128,
+        }
+    }
+}
+
 /// An acceleration measurement.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Acceleration {
     pub(crate) x: u16,
     pub(crate) y: u16,
     pub(crate) z: u16,
-    pub(crate) resolution_factor: i16,
-    pub(crate) scaling_factor: u8,
+    pub(crate) factor: AccelerationFactor,
 }
 
 impl Acceleration {
@@ -93,47 +155,47 @@ impl Acceleration {
     /// Unscaled acceleration in X-direction.
     #[inline]
     pub const fn x_unscaled(&self) -> i16 {
-        self.x as i16 / self.resolution_factor
+        self.x as i16 / self.factor.resolution()
     }
 
     /// Unscaled acceleration in Y-direction.
     #[inline]
     pub const fn y_unscaled(&self) -> i16 {
-        self.y as i16 / self.resolution_factor
+        self.y as i16 / self.factor.resolution()
     }
 
     /// Unscaled acceleration in Z-direction.
     #[inline]
     pub const fn z_unscaled(&self) -> i16 {
-        self.z as i16 / self.resolution_factor
+        self.z as i16 / self.factor.resolution()
     }
 
     /// Unscaled acceleration in X-, Y- and Z-directions.
     #[inline]
     pub const fn xyz_unscaled(&self) -> (i16, i16, i16) {
         (
-            self.x as i16 / self.resolution_factor,
-            self.y as i16 / self.resolution_factor,
-            self.z as i16 / self.resolution_factor,
+            self.x as i16 / self.factor.resolution(),
+            self.y as i16 / self.factor.resolution(),
+            self.z as i16 / self.factor.resolution(),
         )
     }
 
     /// Acceleration in X-direction in m*g* (milli-*g*).
     #[inline]
     pub const fn x_mg(&self) -> i32 {
-        self.x_unscaled() as i32 * self.scaling_factor as i32
+        self.x_unscaled() as i32 * self.factor.scaling()
     }
 
     /// Acceleration in Y-direction in m*g* (milli-*g*).
     #[inline]
     pub const fn y_mg(&self) -> i32 {
-        self.y_unscaled() as i32 * self.scaling_factor as i32
+        self.y_unscaled() as i32 * self.factor.scaling()
     }
 
     /// Acceleration in Z-direction in m*g* (milli-*g*).
     #[inline]
     pub const fn z_mg(&self) -> i32 {
-        self.z_unscaled() as i32 * self.scaling_factor as i32
+        self.z_unscaled() as i32 * self.factor.scaling()
     }
 
     /// Acceleration in X-, Y- and Z-directions in m*g* (milli-*g*).
@@ -142,9 +204,9 @@ impl Acceleration {
         let (x_unscaled, y_unscaled, z_unscaled) = self.xyz_unscaled();
 
         (
-            x_unscaled as i32 * self.scaling_factor as i32,
-            y_unscaled as i32 * self.scaling_factor as i32,
-            z_unscaled as i32 * self.scaling_factor as i32,
+            x_unscaled as i32 * self.factor.scaling(),
+            y_unscaled as i32 * self.factor.scaling(),
+            z_unscaled as i32 * self.factor.scaling(),
         )
     }
 }
